@@ -15,7 +15,32 @@ services:
     # Mapping local directory to container directory (local:container)
     # so local and container code is in sync and dont need to build everytime to update code
     volumes:
-      - ./app:/app
-    # Command used to run this service can overwrite using "docker-compose run"
+      - ./app:/app # local : container
+    # Command "docker-compose up" is used to run this service and can be overwrite using "docker-compose run"
     command: >
-      sh -c "python manage.py runserver 0.0.0.0:8000"
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=db # Name of db service
+      - DB_NAME=devdb # Name of database
+      - DB_USER=devuser # Database user name
+      - DB_PASS=password123 # User password
+    depends_on:
+      - db # App service depends on db service therefore app will wait for db to start before starting itself
+
+  # Name of second service
+  db:
+    image: postgres:13-alpine
+    # Create volume in container using the volume specified below
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+    environment:
+      # Create new database
+      - POSTGRES_DB=devdb # name of the database
+      - POSTGRES_USER=devuser # User
+      - POSTGRES_PASSWORD=password123 # Password for database
+
+volumes:
+  # name of volume
+  dev-db-data:
