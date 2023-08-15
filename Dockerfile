@@ -1,4 +1,4 @@
-# ALphine is lightweight linux OS
+# Alphine is lightweight linux OS
 FROM python:3.9-alpine3.13 
 LABEL maintainer="TyW-98"
 
