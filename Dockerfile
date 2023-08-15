@@ -21,6 +21,11 @@ ARG DEV=false
 RUN python -m venv /py && \ 
     # Upgrade virtual environment's pip
     /py/bin/pip install --upgrade pip && \
+    # Install postgresql adapter (psycopg2) installation dependencies (specific for 13-alpine OS)
+    apk add --update --no-cache postgresql-client && \ 
+    # Group packages in the directory 
+    apk add --update --no-cache --virtual .tmp-build-deps \
+        build-base postgresql-dev musl-dev && \
     # Install packages from requirements.txt
     /py/bin/pip install -r /tmp/requirements.txt && \
     # IF statement to check if DEV = true then install packages from dev requirements
@@ -29,6 +34,8 @@ RUN python -m venv /py && \
     fi && \
     # remove temporary directory (Since this is not needed after packages are installed)
     rm -rf /tmp && \
+    # Remove packages grouped in the directory (Excess packages)
+    apk del .tmp-build-deps && \
     # Add new user inside docker image (Avoid using root user, which will be the default user if not created.)
     adduser \
         --disabled-password \

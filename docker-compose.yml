@@ -29,7 +29,7 @@ services:
 
   # Name of second service
   db:
-    image: postgres:13-alphine
+    image: postgres:13-alpine
     # Create volume in container using the volume specified below
     volumes:
       - dev-db-data:/var/lib/postgresql/data
