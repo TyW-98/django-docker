@@ -1,0 +1,22 @@
+---
+# Name of the action
+name: Checks
+
+# Trigger event
+on: [push]
+
+# Jobs to run
+jobs:
+  test-lint: # New Job
+    name: Testing and Linting # Name of the job
+    runs-on: ubuntu-20.04 # OS to run the job on
+    steps: # Steps of the job
+      - name: Login to Docker hub
+        uses: docker/login-action@v1 # Pre-made action from github action repo
+        with:
+          username: ${{secrets.DOCKER_USERNAME}}
+          password: ${{secrets.DOCKER_TOKEN}}
+      - name: Checkout
+        uses: actions/checkout@v2 # Check if code is available
+      - name: Test
+        run: docker-compose run --rm app sh -c "python manage.py test"
