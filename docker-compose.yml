@@ -1,0 +1,21 @@
+# Docker compose syntax version
+version: "3.9"
+
+services:
+  # Name of the service
+  app:
+    # Build docker file in current directory (.)
+    build:
+      context: .
+      args:
+        - DEV=true
+    # Port mapping. Map local port 8000 to port 8000 inside docker container (local:container)
+    ports:
+      - "8000:8000"
+    # Mapping local directory to container directory (local:container)
+    # so local and container code is in sync and dont need to build everytime to update code
+    volumes:
+      - ./app:/app
+    # Command used to run this service can overwrite using "docker-compose run"
+    command: >
+      sh -c "python manage.py runserver 0.0.0.0:8000"
