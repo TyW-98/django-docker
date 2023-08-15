@@ -1,5 +1,5 @@
-def add(a,b): 
-    """add 
+def add(a, b):
+    """add
 
     Add a and b and return result
 
@@ -8,12 +8,13 @@ def add(a,b):
         b (int): number 2
 
     Returns:
-        int:  sum of a and b 
+        int:  sum of a and b
     """
     return a + b
 
-def minus(a,b):
-    """minus 
+
+def minus(a, b):
+    """minus
 
     Minus a and b
 
@@ -21,11 +22,11 @@ def minus(a,b):
         a (int): number 1
         b (int): number 2
     """
-    
-    return a-b
+    return a - b
 
-def multiply(a,b):
-    """multiply 
+
+def multiply(a, b):
+    """multiply
 
     Multiply numbers together
 
@@ -33,5 +34,4 @@ def multiply(a,b):
         a (int): number 1
         b (int): number 2
     """
-    
     return a * b
