@@ -15,7 +15,7 @@ services:
     # Mapping local directory to container directory (local:container)
     # so local and container code is in sync and dont need to build everytime to update code
     volumes:
-      - ./app:/app
+      - ./app:/app # local : container
     # Command used to run this service can overwrite using "docker-compose run"
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
