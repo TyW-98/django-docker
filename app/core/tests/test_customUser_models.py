@@ -13,8 +13,8 @@ class UserModelTest(TestCase):
         email = "test@example.com"
         password = "testpassword"
         user = get_user_model().objects.create_user(
-            email = email,
-            password = password
+            email=email,
+            password=password
         )
 
         self.assertEqual(user.email, email)
@@ -30,26 +30,28 @@ class UserModelTest(TestCase):
         ]
 
         for test_email, expected_email in sample_emails:
-            user = get_user_model().objects.create_user(test_email,"samplepassword")
+            user = get_user_model().objects.create_user(
+                test_email,
+                "samplepassword"
+                )
 
             self.assertEqual(user.email, expected_email)
-            
+
     def test_new_user_empty_email_error(self):
         """Raise Error if no email is passed in"""
         with self.assertRaises(ValueError):
             get_user_model().objects.create_user("", "testpassword")
-            
+
     def test_create_super_user(self):
         """Test creating super user"""
         email = "test@example.com"
         password = "testpassword"
         super_user = get_user_model().objects.create_superuser(
-            email = email, 
-            password = password
+            email=email,
+            password=password
             )
-        
+
         self.assertEqual(super_user.email, email)
         self.assertTrue(super_user.check_password(password))
         self.assertTrue(super_user.is_superuser)
         self.assertTrue(super_user.is_staff)
-            
