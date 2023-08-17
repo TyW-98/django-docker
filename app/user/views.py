@@ -1,4 +1,4 @@
-""" 
+"""
 Views for USER API
 """
 from rest_framework import generics
