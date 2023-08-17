@@ -1,4 +1,4 @@
-""" 
+"""
 Test User API
 """
 from django.contrib.auth import get_user_model
@@ -8,6 +8,7 @@ from rest_framework import APIClient, status
 
 # Get URL from name of view (app:endpoint)
 CREATE_USER_URL = reverse("user:create")
+
 
 def create_user(**params):
     """Create and return a new user for testing"""
@@ -32,7 +33,7 @@ class PublicUserAPITest(TestCase):
         res = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        
+
         # Retrieve user from database by searching for email (Check if user is created in database) # noqa
         user = get_user_model().objects.get(email=payload["email"])
         # Check if user password matches payload password
@@ -52,7 +53,7 @@ class PublicUserAPITest(TestCase):
         create_user(**payload)
         res = self.client.post(CREATE_USER_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-    
+
     def test_password_too_short(self):
         """Test length of password. Less than 5"""
         payload = {
