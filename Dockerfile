@@ -45,6 +45,6 @@ RUN python -m venv /py && \
 # Will add "/py/bin" to the system path therefore it will run command in the path everytime.
 ENV PATH="/py/bin:$PATH"
 
-# Switching to this user
+# Switching to this user so not operating in root user
 USER django-user
 
