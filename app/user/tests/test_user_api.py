@@ -4,7 +4,8 @@ Test User API
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from rest_framework import APIClient, status
+from rest_framework import status
+from rest_framework.test import APIClient
 
 # Get URL from name of view (app:endpoint)
 CREATE_USER_URL = reverse("user:create")
