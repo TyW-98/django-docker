@@ -9,6 +9,14 @@ from rest_framework.test import APIClient
 
 # Get URL from name of view (app:endpoint)
 CREATE_USER_URL = reverse("user:create")
+TOKEN_URL = reverse("user:token")
+
+user_details = {
+    "first_name": "test First Name",
+    "last_name": "test Last Name",
+    "email": "user@example.com",
+    "password": "testpassword",
+}
 
 
 def create_user(**params):
@@ -70,3 +78,40 @@ class PublicUserAPITest(TestCase):
             email=payload["email"]
         ).exists()
         self.assertFalse(user_exist)
+
+    def test_create_user_token(self):
+        """Test generate user token for login"""
+
+        # Create new user
+        create_user(**user_details)
+        # Generate login payload to be posted to TOKEN_URL
+        login_payload = {
+            "email": user_details["email"],
+            "password": user_details["password"]
+        }
+        res = self.client.post(TOKEN_URL, login_payload)
+
+        self.assertIn("token", res.data)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_bad_login_credentials(self):
+        """Test for bad login credentials"""
+        create_user(**user_details)
+        wrong_login_payload = {
+            "email": user_details["email"],
+            "password": "testwrongpassword"
+        }
+        res = self.client.post(TOKEN_URL, wrong_login_payload)
+        self.assertNotIn("token", res.data)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_empty_login_credentials(self):
+        """Test for empty login password credentials"""
+        create_user(**user_details)
+        empty_login_payload = {
+            "email": user_details["email"],
+            "password": ""
+        }
+        res = self.client.post(TOKEN_URL, empty_login_payload)
+        self.assertNotIn("token", res.data)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
