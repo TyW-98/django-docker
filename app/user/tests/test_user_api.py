@@ -81,8 +81,8 @@ class PublicUserAPITest(TestCase):
 
     def test_create_user_token(self):
         """Test generate user token for login"""
-        
-        #Create new user
+
+        # Create new user
         create_user(**user_details)
         # Generate login payload to be posted to TOKEN_URL
         login_payload = {
@@ -90,10 +90,10 @@ class PublicUserAPITest(TestCase):
             "password": user_details["password"]
         }
         res = self.client.post(TOKEN_URL, login_payload)
-        
+
         self.assertIn("token", res.data)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        
+
     def test_bad_login_credentials(self):
         """Test for bad login credentials"""
         create_user(**user_details)
@@ -104,9 +104,9 @@ class PublicUserAPITest(TestCase):
         res = self.client.post(TOKEN_URL, wrong_login_payload)
         self.assertNotIn("token", res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
     def test_empty_login_credentials(self):
-        """Test for empty login credentials"""
+        """Test for empty login password credentials"""
         create_user(**user_details)
         empty_login_payload = {
             "email": user_details["email"],
