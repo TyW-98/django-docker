@@ -27,7 +27,7 @@ class CustomUserAdmin(BaseUserAdmin):
     )
     readonly_fields = ["last_login"]
     add_fieldsets = (
-        (None, {
+        ("User Details", {
             'classes': ('wide',),
             'fields': (
                 "email",
@@ -44,3 +44,39 @@ class CustomUserAdmin(BaseUserAdmin):
 
 
 admin.site.register(models.CustomUser, CustomUserAdmin)
+
+
+class RecipeAdmin(admin.ModelAdmin):
+    ordering = ["id"]
+    list_display = [
+        "title",
+        "user"
+    ]
+    fieldsets = (
+        (translate("User"), {"fields": ("user",)}),
+        (translate("Recipe Details"), {"fields": (
+            "title", 
+            "time_needed", 
+            "cost", 
+            "description"
+        )}),
+        (translate("Important Dates"), {"fields": (
+            "created_at",
+            "last_modified"
+        )})
+    )
+    readonly_fields = ["created_at", "last_modified"]
+    add_fieldsets = (
+        ("Recipe Details", {
+            "classes": ("wide",),
+            "fields": (
+                "user",
+                "title",
+                "time_needed",
+                "cost",
+                "description"
+            )
+        })
+    )
+
+admin.site.register(models.Recipe, RecipeAdmin)
