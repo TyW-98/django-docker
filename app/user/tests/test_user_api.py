@@ -146,9 +146,9 @@ class PrivateUserAPITest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, {
-            "email": self.user["email"],
-            "first_name": self.user["first_name"],
-            "last_name": self.user["last_name"]
+            "email": self.user.email,
+            "first_name": self.user.first_name,
+            "last_name": self.user.last_name,
         })
 
     def test_not_allowed_post(self):
@@ -173,7 +173,11 @@ class PrivateUserAPITest(TestCase):
         res = self.client.patch(ACCOUNT_URL, patch_payload)
 
         self.user.refresh_from_db()
-        self.assertEqual(res.data, {
+        self.assertEqual({
+            "first_name": self.user.first_name,
+            "last_name": self.user.last_name
+            }, 
+            {
             "first_name": patch_payload["first_name"],
             "last_name": patch_payload["last_name"]
         })
