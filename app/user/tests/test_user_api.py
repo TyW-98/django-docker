@@ -176,7 +176,7 @@ class PrivateUserAPITest(TestCase):
         self.assertEqual({
             "first_name": self.user.first_name,
             "last_name": self.user.last_name
-            }, 
+            },
             {
             "first_name": patch_payload["first_name"],
             "last_name": patch_payload["last_name"]
