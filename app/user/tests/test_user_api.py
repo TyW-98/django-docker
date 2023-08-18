@@ -116,19 +116,19 @@ class PublicUserAPITest(TestCase):
         res = self.client.post(TOKEN_URL, empty_login_payload)
         self.assertNotIn("token", res.data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
     def test_authentication_endpoint(self):
         """Test authentication is required and enforced in account endpoint""" # noqa
         res = self.client.get(ACCOUNT_URL)
-        
-        self.assertEqual(res.status_code,status.HTTP_401_UNAUTHORIZED)
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class PrivateUserAPITest(TestCase):
     """Test user API request thats required authentication"""
-    
+
     def setUp(self):
-        """Setup test user which will be used in each test""" 
+        """Setup test user which will be used in each test"""
         test_user_details = {
             "email": "test@example.com",
             "password": "testpassword",
@@ -139,18 +139,18 @@ class PrivateUserAPITest(TestCase):
         self.client = APIClient()
         # Force authenticate the user
         self.client.force_authenticate(user=self.user)
-        
+
     def test_retrieve_user_details(self):
         """Test retrieving user's account information"""
         res = self.client.get(ACCOUNT_URL)
-        
+
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, {
             "email": self.user["email"],
             "first_name": self.user["first_name"],
             "last_name": self.user["last_name"]
         })
-        
+
     def test_not_allowed_post(self):
         """Test POST method not allow on account endpoint"""
         post_payload = {
@@ -160,7 +160,7 @@ class PrivateUserAPITest(TestCase):
             "last_name": "test last"
         }
         res = self.client.post(ACCOUNT_URL, post_payload)
-        
+
         self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_update_user_details(self):
@@ -171,7 +171,7 @@ class PrivateUserAPITest(TestCase):
             "last_name": "new last"
         }
         res = self.client.patch(ACCOUNT_URL, patch_payload)
-        
+
         self.user.refresh_from_db()
         self.assertEqual(res.data, {
             "first_name": patch_payload["first_name"],
