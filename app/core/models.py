@@ -43,10 +43,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
-    
+
     def __str__(self):
         return f"{self.email} ({self.id})"
-    
+
 
 class Recipe(models.Model):
     "Recipe"
@@ -61,6 +61,6 @@ class Recipe(models.Model):
     link = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return self.title

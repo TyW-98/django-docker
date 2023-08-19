@@ -55,9 +55,9 @@ class RecipeAdmin(admin.ModelAdmin):
     fieldsets = (
         (translate("User"), {"fields": ("user",)}),
         (translate("Recipe Details"), {"fields": (
-            "title", 
-            "time_needed", 
-            "cost", 
+            "title",
+            "time_needed",
+            "cost",
             "description"
         )}),
         (translate("Important Dates"), {"fields": (
@@ -78,5 +78,6 @@ class RecipeAdmin(admin.ModelAdmin):
             )
         })
     )
+
 
 admin.site.register(models.Recipe, RecipeAdmin)

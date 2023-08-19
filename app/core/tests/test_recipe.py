@@ -25,7 +25,7 @@ class RecipeTests(TestCase):
             "description": "Sample recipe description"
         }
         recipe = models.Recipe.objects.create(
-            user = user,
+            user=user,
             **sample_recipe
         )
 
