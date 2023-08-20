@@ -58,7 +58,8 @@ class RecipeAdmin(admin.ModelAdmin):
             "title",
             "time_needed",
             "cost",
-            "description"
+            "description",
+            "link"
         )}),
         (translate("Important Dates"), {"fields": (
             "created_at",
@@ -74,7 +75,8 @@ class RecipeAdmin(admin.ModelAdmin):
                 "title",
                 "time_needed",
                 "cost",
-                "description"
+                "description",
+                "link"
             )
         })
     )

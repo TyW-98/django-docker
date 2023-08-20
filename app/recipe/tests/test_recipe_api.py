@@ -13,7 +13,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 RECIPE_URL = reverse("recipe:recipe-list")
-USER_RECIPE_URL = reverse("recipe:user-recipe")
+USER_SPECIFIC_RECIPE_URL = reverse("recipe:recipe-fetch-user-recipes")
 
 
 def create_recipe(user, **params):
@@ -27,7 +27,7 @@ def create_recipe(user, **params):
     }
     # Overwrite default recipe dictionary with any values passed into params
     default_recipe.update(params)
-    return Recipe.objects.create(user, **default_recipe)
+    return Recipe.objects.create(user=user, **default_recipe)
 
 
 class PublicRecipeAPITest(TestCase):
@@ -60,18 +60,18 @@ class PrivateRecipeAPITest(TestCase):
 
     def test_retrieve_recipes(self):
         """Test retrieving recipes"""
-        create_recipe(self.user)
-        create_recipe(self.user)
+        create_recipe(user=self.user)
+        create_recipe(user=self.user)
 
         res = self.client.get(RECIPE_URL)
         # Retrieving all recipes
         recipes = Recipe.objects.all().order_by("id")
         serializer = RecipeSerializer(recipes, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer)
+        self.assertEqual(res.data, serializer.data)
 
     def test_retrieving_user_recipes(self):
-        """Test retrieving user's recipes"""
+        """Test retrieving specific user's recipes"""
         second_test_user_details = {
             "email": "test2@example.com",
             "password": "password",
@@ -81,12 +81,12 @@ class PrivateRecipeAPITest(TestCase):
         test_user2 = get_user_model().objects.create_user(
             **second_test_user_details
         )
-        create_recipe(self.user)
-        create_recipe(test_user2)
+        create_recipe(user=self.user)
+        create_recipe(user=test_user2)
 
-        res = self.client.get(USER_RECIPE_URL)
+        res = self.client.get(USER_SPECIFIC_RECIPE_URL)
         # Retrieving user specific recipes
         recipes = Recipe.objects.filter(user=self.user)
         serializer = RecipeSerializer(recipes, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer)
+        self.assertEqual(res.data, serializer.data)
