@@ -6,13 +6,14 @@ from recipe import serializers
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 
 class RecipeViewSets(viewsets.ModelViewSet):
     """View for Recipe API"""
-    serializer_class = serializers.RecipeSerializer
+    serializer_class = serializers.RecipeDetailSerializer
     # Fetch all recipe data
     queryset = Recipe.objects.all()
     permission_classes = [AllowAny]
@@ -26,5 +27,20 @@ class RecipeViewSets(viewsets.ModelViewSet):
     def fetch_user_recipes(self, request):
         user_recipes = self.queryset.filter(
             user=self.request.user).order_by('id')
-        serializer = self.get_serializer(user_recipes, many=True)
+        serializer = serializers.RecipeSerializer(user_recipes, many=True)
         return Response(serializer.data)
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return serializers.RecipeSerializer
+
+        return self.serializer_class
+
+    def perform_create(self, serializer):
+        """When new object is created this method will execute"""
+        if self.request.user:
+            serializer.save(user=self.request.user)
+        else:
+            raise PermissionDenied(
+                "You would need to register an account to create recipes"
+            )

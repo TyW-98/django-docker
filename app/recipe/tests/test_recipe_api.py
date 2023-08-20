@@ -97,10 +97,34 @@ class PrivateRecipeAPITest(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_retrieving_recipe_details(self):
-        "Test retrieving specific recipe's details"
+        """Test retrieving specific recipe's details"""
         test_recipe = create_recipe(user=self.user)
 
         res = self.client.get(recipe_detail_url(test_recipe.id))
         serializer = RecipeDetailSerializer(test_recipe, many=False)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_create_recipe(self):
+        """Test creating new recipes"""
+        # Dont need pass in user as argument as it is already logged in in setUp # noqa
+        test_recipe_payload = {
+            "title": "test recipe title",
+            "time_needed": 43,
+            "cost": Decimal("5.32"),
+            "description": "test recipe description",
+            "link": "http://example.com"
+        }
+        # Make HTTP post request to URL
+        res = self.client.post(RECIPE_URL, test_recipe_payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        # Retrieve specific recipe using id returned from res
+        created_recipe = Recipe.objects.get(id=res.data["id"])
+
+        # Check the values of every items in created_recipe obj
+        for key, value in test_recipe_payload.items():
+            self.assertEqual(getattr(created_recipe, key), value)
+
+        # Check if the user in the recipe matches the one used to create
+        self.assertEqual(created_recipe.user, self.user)
