@@ -8,12 +8,17 @@ from core.models import Recipe
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from recipe.serializers import RecipeSerializer
+from recipe.serializers import RecipeDetailSerializer, RecipeSerializer
 from rest_framework import status
 from rest_framework.test import APIClient
 
 RECIPE_URL = reverse("recipe:recipe-list")
 USER_SPECIFIC_RECIPE_URL = reverse("recipe:recipe-fetch-user-recipes")
+
+
+def recipe_detail_url(recipe_id):
+    """Create dynamic recipe detail URL"""
+    return reverse("recipe:recipe-detail", args=[recipe_id])
 
 
 def create_recipe(user, **params):
@@ -88,5 +93,14 @@ class PrivateRecipeAPITest(TestCase):
         # Retrieving user specific recipes
         recipes = Recipe.objects.filter(user=self.user)
         serializer = RecipeSerializer(recipes, many=True)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_retrieving_recipe_details(self):
+        "Test retrieving specific recipe's details"
+        test_recipe = create_recipe(user=self.user)
+
+        res = self.client.get(recipe_detail_url(test_recipe.id))
+        serializer = RecipeDetailSerializer(test_recipe, many=False)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
