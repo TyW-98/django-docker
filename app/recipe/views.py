@@ -38,7 +38,7 @@ class RecipeViewSets(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """When new object is created this method will execute"""
-        if self.request.user:
+        if self.request.user.is_authenticated:
             serializer.save(user=self.request.user)
         else:
             raise PermissionDenied(

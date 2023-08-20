@@ -47,6 +47,27 @@ class PublicRecipeAPITest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
+    def test_unauthenticate_create_recipe(self):
+        """Test creating recipes without authentication"""
+        test_recipe_payload = {
+            "title": "test recipe title",
+            "time_needed": 43,
+            "cost": Decimal("5.32"),
+            "description": "test recipe description",
+            "link": "http://example.com"
+        }
+        res = self.client.post(RECIPE_URL, test_recipe_payload)
+
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            res.data,
+            {
+                'detail': "You would need to register an account to create recipes" # noqa
+            }
+        )
+        # Ensure no recipes was created
+        self.assertEqual(Recipe.objects.count(), 0)
+
 
 class PrivateRecipeAPITest(TestCase):
     """Test recipe API requests that requires authentication"""
