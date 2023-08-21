@@ -201,7 +201,7 @@ class PrivateRecipeAPITest(TestCase):
         # Check if the user in the recipe matches the one used to create
         self.assertEqual(created_recipe.user, self.user)
 
-    def test_update_recipe(self):
+    def test_partial_update_recipe(self):
         """Test only allow recipe owner to update recipe details"""
         test_recipe_payload = {
             "title": "test recipe title",
@@ -218,7 +218,7 @@ class PrivateRecipeAPITest(TestCase):
             "title": "update title",
         }
         # Fetch the recipe that needs to be updated
-        update_recipe = Recipe.objects.get(id=res.data["id"])
+        recipe = Recipe.objects.get(id=res.data["id"])
         # Send HTTP patch request to update recipe details
         res = self.client.patch(
             recipe_detail_url(res.data["id"]),
@@ -227,15 +227,81 @@ class PrivateRecipeAPITest(TestCase):
         # Check status of patch request
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         # Refresh database
-        update_recipe.refresh_from_db()
+        recipe.refresh_from_db()
         # Ensure the recipe owner remains the same
-        self.assertEqual(update_recipe.user, self.user)
+        self.assertEqual(recipe.user, self.user)
         # Check values in updated recipe
         for key, value in new_recipe_payload.items():
-            self.assertEqual(getattr(update_recipe, key), value)
+            self.assertEqual(getattr(recipe, key), value)
         # Check last modified time is updated
-        time_difference = timezone.now() - update_recipe.last_modified
+        time_difference = timezone.now() - recipe.last_modified
         # Set time threshold
         maximum_time_difference = timedelta(seconds=1)
         # Check last_modified time in recipe is updated
         self.assertLessEqual(time_difference, maximum_time_difference)
+
+    def test_full_update_recipe(self):
+        """Test full update of recipe details"""
+        test_recipe_payload = {
+            "title": "test recipe title",
+            "time_needed": 43,
+            "cost": Decimal("5.32"),
+            "description": "test recipe description",
+            "link": "http://example.com"
+        }
+        res = self.client.post(RECIPE_URL, test_recipe_payload)
+        # Check status of creating new recipe
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        # Fetch original recipt from database
+        recipe = Recipe.objects.get(id=res.data["id"])
+        # New recipe details payload
+        new_details = {
+            "title": "updated title",
+            "time_needed": 5,
+            "cost": Decimal("54.42"),
+            "description": "Test updated recipe description",
+            "link": "http://newlink.example.com"
+        }
+        # Send HTTP patch request
+        res = self.client.patch(recipe_detail_url(res.data["id"]), new_details)
+        # Check status of HTTP patch request
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Refresh details of recipe after patch
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.user, self.user)
+        # Check every attribute in the new object matches with new_details dictionary # noqa
+        for key, value in new_details.items():
+            self.assertEqual(getattr(recipe, key), value)
+
+    def test_update_recipe_owner(self):
+        """Test forbidden updating recipe owner"""
+        recipe = create_recipe(self.user)
+        user2 = get_user_model().objects.create_user(
+            email="test2@example.com",
+            password="examplepassword",
+            first_name="first 2",
+            last_name="last 2"
+        )
+        payload = {"user": user2.id}
+        self.client.patch(recipe_detail_url(recipe.id), payload)
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.user, self.user)
+
+    def test_delete_recipe(self):
+        """Test successfully delete recipes"""
+        recipe = create_recipe(self.user)
+        res = self.client.delete(recipe_detail_url(recipe.id))
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Recipe.objects.filter(id=recipe.id).exists())
+        """Test deleting other user's recipes not allowed"""
+        user2 = get_user_model().objects.create_user(
+            email="test2@example.com",
+            password="examplepassword",
+            first_name="first 2",
+            last_name="last 2"
+        )
+        recipe2 = create_recipe(user2)
+        res = self.client.delete(recipe_detail_url(recipe2))
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(Recipe.objects.filter(id=recipe2.id).exists())

@@ -50,11 +50,31 @@ class RecipeViewSets(viewsets.ModelViewSet):
         """Execute when updating recipe"""
         recipe_details = serializer.instance
 
-        if self.request.user.is_superuser or self.request.user.is_authenticated and recipe_details.user == self.request.user: # noqa
+        if (
+            self.request.user.is_superuser
+            or self.request.user.is_staff
+            or (self.request.user.is_authenticated
+                and recipe_details.user == self.request.user)
+        ):
             recipe_details.last_modified = timezone.now()
             recipe_details.save()
             serializer.save()
         else:
             raise PermissionDenied(
                 "You do not have permission to edit the recipe"
+            )
+
+    def perform_destroy(self, instance):
+        """Execute when deleting recipe"""
+
+        if (
+            self.request.user.is_superuser
+            or self.request.user.is_staff
+            or (self.request.user.is_authenticated
+                and instance.user == self.request.user)
+        ):
+            instance.delete()
+        else:
+            raise PermissionDenied(
+                "You do not have permission to delete the recipe"
             )
