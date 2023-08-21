@@ -2,6 +2,7 @@
 Views for Recipe API
 """
 from core.models import Recipe
+from django.utils import timezone
 from recipe import serializers
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
@@ -43,4 +44,37 @@ class RecipeViewSets(viewsets.ModelViewSet):
         else:
             raise PermissionDenied(
                 "You would need to register an account to create recipes"
+            )
+
+    def perform_update(self, serializer):
+        """Execute when updating recipe"""
+        recipe_details = serializer.instance
+
+        if (
+            self.request.user.is_superuser
+            or self.request.user.is_staff
+            or (self.request.user.is_authenticated
+                and recipe_details.user == self.request.user)
+        ):
+            recipe_details.last_modified = timezone.now()
+            recipe_details.save()
+            serializer.save()
+        else:
+            raise PermissionDenied(
+                "You do not have permission to edit the recipe"
+            )
+
+    def perform_destroy(self, instance):
+        """Execute when deleting recipe"""
+
+        if (
+            self.request.user.is_superuser
+            or self.request.user.is_staff
+            or (self.request.user.is_authenticated
+                and instance.user == self.request.user)
+        ):
+            instance.delete()
+        else:
+            raise PermissionDenied(
+                "You do not have permission to delete the recipe"
             )
