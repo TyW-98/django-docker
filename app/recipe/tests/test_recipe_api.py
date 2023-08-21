@@ -70,6 +70,47 @@ class PublicRecipeAPITest(TestCase):
         # Ensure no recipes was created
         self.assertEqual(Recipe.objects.count(), 0)
 
+    def test_unauthenticated_update_recipe(self):
+        test_user_details = {
+            "email": "test@example.com",
+            "password": "testpassword",
+            "first_name": "first",
+            "last_name": "last_name"
+        }
+        recipe_owner = get_user_model().objects.create_user(
+            **test_user_details
+        )
+        authenticated_client = APIClient()
+        authenticated_client.force_authenticate(user=recipe_owner)
+        test_recipe_payload = {
+            "title": "test recipe title",
+            "time_needed": 43,
+            "cost": Decimal("5.32"),
+            "description": "test recipe description",
+            "link": "http://example.com"
+        }
+        auth_res = authenticated_client.post(RECIPE_URL, test_recipe_payload)
+
+        self.assertEqual(auth_res.status_code, status.HTTP_201_CREATED)
+
+        test_update_recipe_payload = {
+            "title": "update title"
+        }
+        original_recipe = Recipe.objects.get(id=auth_res.data["id"])
+
+        res = self.client.patch(
+            recipe_detail_url(auth_res.data['id']),
+            test_update_recipe_payload
+        )
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        original_recipe.refresh_from_db()
+
+        for key, value in test_update_recipe_payload.items():
+            self.assertEqual(
+                getattr(original_recipe, key),
+                test_recipe_payload[key]
+            )
+
 
 class PrivateRecipeAPITest(TestCase):
     """Test recipe API requests that requires authentication"""

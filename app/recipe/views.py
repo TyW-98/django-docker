@@ -50,7 +50,7 @@ class RecipeViewSets(viewsets.ModelViewSet):
         """Execute when updating recipe"""
         recipe_details = serializer.instance
 
-        if self.request.user.is_authenticated and recipe_details.user == self.request.user: # noqa
+        if self.request.user.is_superuser or self.request.user.is_authenticated and recipe_details.user == self.request.user: # noqa
             recipe_details.last_modified = timezone.now()
             recipe_details.save()
             serializer.save()
