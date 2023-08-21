@@ -8,12 +8,17 @@ from core.models import Recipe
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from recipe.serializers import RecipeSerializer
+from recipe.serializers import RecipeDetailSerializer, RecipeSerializer
 from rest_framework import status
 from rest_framework.test import APIClient
 
 RECIPE_URL = reverse("recipe:recipe-list")
 USER_SPECIFIC_RECIPE_URL = reverse("recipe:recipe-fetch-user-recipes")
+
+
+def recipe_detail_url(recipe_id):
+    """Create dynamic recipe detail URL"""
+    return reverse("recipe:recipe-detail", args=[recipe_id])
 
 
 def create_recipe(user, **params):
@@ -41,6 +46,27 @@ class PublicRecipeAPITest(TestCase):
         res = self.client.get(RECIPE_URL)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+    def test_unauthenticate_create_recipe(self):
+        """Test creating recipes without authentication"""
+        test_recipe_payload = {
+            "title": "test recipe title",
+            "time_needed": 43,
+            "cost": Decimal("5.32"),
+            "description": "test recipe description",
+            "link": "http://example.com"
+        }
+        res = self.client.post(RECIPE_URL, test_recipe_payload)
+
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            res.data,
+            {
+                'detail': "You would need to register an account to create recipes" # noqa
+            }
+        )
+        # Ensure no recipes was created
+        self.assertEqual(Recipe.objects.count(), 0)
 
 
 class PrivateRecipeAPITest(TestCase):
@@ -90,3 +116,36 @@ class PrivateRecipeAPITest(TestCase):
         serializer = RecipeSerializer(recipes, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_retrieving_recipe_details(self):
+        """Test retrieving specific recipe's details"""
+        test_recipe = create_recipe(user=self.user)
+
+        res = self.client.get(recipe_detail_url(test_recipe.id))
+        serializer = RecipeDetailSerializer(test_recipe, many=False)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_create_recipe(self):
+        """Test creating new recipes"""
+        # Dont need pass in user as argument as it is already logged in in setUp # noqa
+        test_recipe_payload = {
+            "title": "test recipe title",
+            "time_needed": 43,
+            "cost": Decimal("5.32"),
+            "description": "test recipe description",
+            "link": "http://example.com"
+        }
+        # Make HTTP post request to URL
+        res = self.client.post(RECIPE_URL, test_recipe_payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        # Retrieve specific recipe using id returned from res
+        created_recipe = Recipe.objects.get(id=res.data["id"])
+
+        # Check the values of every items in created_recipe obj
+        for key, value in test_recipe_payload.items():
+            self.assertEqual(getattr(created_recipe, key), value)
+
+        # Check if the user in the recipe matches the one used to create
+        self.assertEqual(created_recipe.user, self.user)
