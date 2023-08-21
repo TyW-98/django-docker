@@ -77,9 +77,11 @@ class PublicRecipeAPITest(TestCase):
             "first_name": "first",
             "last_name": "last_name"
         }
+        # Create recipe owner
         recipe_owner = get_user_model().objects.create_user(
             **test_user_details
         )
+        # Authroised client
         authenticated_client = APIClient()
         authenticated_client.force_authenticate(user=recipe_owner)
         test_recipe_payload = {
@@ -89,27 +91,33 @@ class PublicRecipeAPITest(TestCase):
             "description": "test recipe description",
             "link": "http://example.com"
         }
+        # Create new recipe
         auth_res = authenticated_client.post(RECIPE_URL, test_recipe_payload)
-
+        # Check recipe successfully created
         self.assertEqual(auth_res.status_code, status.HTTP_201_CREATED)
 
         test_update_recipe_payload = {
             "title": "update title"
         }
+        # Fetch original recipe
         original_recipe = Recipe.objects.get(id=auth_res.data["id"])
-
+        # Try patching without authenticated user
         res = self.client.patch(
             recipe_detail_url(auth_res.data['id']),
             test_update_recipe_payload
         )
+        # Check patching not allow with unauthenticated user
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        # Refresh database
         original_recipe.refresh_from_db()
-
+        # Check attributes in object matches with original recipe details
         for key, value in test_update_recipe_payload.items():
             self.assertEqual(
                 getattr(original_recipe, key),
                 test_recipe_payload[key]
             )
+        # Check recipe owner still remains the same
+        self.assertEqual(original_recipe.user, recipe_owner)
 
 
 class PrivateRecipeAPITest(TestCase):
@@ -220,6 +228,8 @@ class PrivateRecipeAPITest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         # Refresh database
         update_recipe.refresh_from_db()
+        # Ensure the recipe owner remains the same
+        self.assertEqual(update_recipe.user, self.user)
         # Check values in updated recipe
         for key, value in new_recipe_payload.items():
             self.assertEqual(getattr(update_recipe, key), value)
