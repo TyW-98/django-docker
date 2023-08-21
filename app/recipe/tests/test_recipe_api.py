@@ -2,12 +2,14 @@
 Tests for Recipe API
 """
 
+from datetime import timedelta
 from decimal import Decimal
 
 from core.models import Recipe
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from recipe.serializers import RecipeDetailSerializer, RecipeSerializer
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -149,3 +151,40 @@ class PrivateRecipeAPITest(TestCase):
 
         # Check if the user in the recipe matches the one used to create
         self.assertEqual(created_recipe.user, self.user)
+
+    def test_update_recipe(self):
+        """Test only allow recipe owner to update recipe details"""
+        test_recipe_payload = {
+            "title": "test recipe title",
+            "time_needed": 43,
+            "cost": Decimal("5.32"),
+            "description": "test recipe description",
+            "link": "http://example.com"
+        }
+        res = self.client.post(RECIPE_URL, test_recipe_payload)
+        # Check status of creating new recipe
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        # Recipe's new details
+        new_recipe_payload = {
+            "title": "update title",
+        }
+        # Fetch the recipe that needs to be updated
+        update_recipe = Recipe.objects.get(id=res.data["id"])
+        # Send HTTP patch request to update recipe details
+        res = self.client.patch(
+            recipe_detail_url(res.data["id"]),
+            new_recipe_payload
+        )
+        # Check status of patch request
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Refresh database
+        update_recipe.refresh_from_db()
+        # Check values in updated recipe
+        for key, value in new_recipe_payload.items():
+            self.assertEqual(getattr(update_recipe, key), value)
+        # Check last modified time is updated
+        time_difference = timezone.now() - update_recipe.last_modified
+        # Set time threshold
+        maximum_time_difference = timedelta(seconds=1)
+        # Check last_modified time in recipe is updated
+        self.assertLessEqual(time_difference, maximum_time_difference)
